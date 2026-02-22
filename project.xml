@@ -74,7 +74,7 @@
 
 	<!-- Comment this out to prevent extending classes in hscript.
 		 Reduces compilation time at the cost of limited HScript flexibility. !-->
-	<define name="CUSTOM_CLASSES" unless="STRIPPED_COMPILE" />
+	<!-- <define name="CUSTOM_CLASSES" unless="STRIPPED_COMPILE" /> -->
 
 	<!-- Comment this out to disable abstract support in hscript. !-->
 	<haxedef name="HSCRIPT_ABSTRACT_SUPPORT" unless="STRIPPED_COMPILE" />
@@ -101,10 +101,10 @@
 	<define name="USE_ADAPTED_ASSETS" unless="web" />
 
 	<!-- Comment this out to disable support for Away3D Flixel Integration (reduces compile times) !-->
-	<define name="THREE_D_SUPPORT" unless="STRIPPED_COMPILE" />
+	<!-- <define name="THREE_D_SUPPORT" unless="STRIPPED_COMPILE" /> -->
 
 	<!-- Comment this out to disable support for Nape integration (flixel.addons.nape) (reduces compile times) !-->
-	<define name="NAPE_ENABLED" unless="STRIPPED_COMPILE" />
+	<!-- <define name="NAPE_ENABLED" unless="STRIPPED_COMPILE" /> -->
 
 	<!-- Comment this out to disable video cutscene support, in case of compilation errors. !-->
 	<section if="cpp">
@@ -166,8 +166,6 @@
 		<!-- TODO: make it copy this manually, instead of using assets node, so it doesn't manually check for fonts -->
 		<assets path='mods' rename='mods' embed='false' />
 	</section>
-
-	<assets path='art/readme.txt' rename='do NOT readme.txt' />
 
 	<!-- OpenAL config -->
 	<section if="desktop">
@@ -243,5 +241,5 @@
 	<haxedef name="hscriptPos" /> <!-- for logging -->
 
 	<!-- EXPERMENTAL FEATURES -->
-	<haxedef name="EXPERIMENTAL_FLXGRAPHIC_DESTROY_FIX" />
+	<!-- <haxedef name="EXPERIMENTAL_FLXGRAPHIC_DESTROY_FIX" /> -->
 </project>
