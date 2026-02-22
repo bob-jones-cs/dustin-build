@@ -1,6 +1,7 @@
 package funkin.options.categories;
 
 import funkin.savedata.FunkinSave;
+import funkin.backend.assets.ModsFolder;
 
 class MiscOptions extends TreeMenuScreen {
 	public function new() {
@@ -25,6 +26,11 @@ class MiscOptions extends TreeMenuScreen {
 			FunkinSave.save.erase();
 			FunkinSave.highscores.clear();
 			FunkinSave.flush();
+
+			FlxG.save.erase();
+			FlxG.save.flush();
+
+			ModsFolder.switchMod(ModsFolder.currentModFolder);
 		}));
 	}
 }
