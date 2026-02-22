@@ -36,6 +36,13 @@ class FramerateCategory extends Sprite {
 		this.title.multiline = this.title.wordWrap = false;
 		this.text.multiline = true;
 
+		this.title.antiAliasType = ADVANCED;
+		// Max on OpenFL
+		this.title.sharpness = 400;
+
+		this.text.antiAliasType = ADVANCED;
+		// Max on OpenFL
+		this.text.sharpness = 400;
 
 		this.text.y = this.title.y + this.title.height + 2;
 	}
