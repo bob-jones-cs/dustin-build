@@ -53,11 +53,11 @@ class Flags {
 	@:lazy public static var TITLE:String = Application.current.meta.get('name');
 	@:lazy public static var VERSION:String = Application.current.meta.get('version');
 
-	@:lazy public static var VERSION_MESSAGE:String = 'Codename Engine v$VERSION';
+	@:lazy public static var VERSION_MESSAGE:String = "Friday Night Dustin'" + ' v$VERSION';
 
-	public static var REPO_NAME:String = "CodenameEngine";
-	public static var REPO_OWNER:String = "CodenameCrew";
-	public static var REPO_URL:String = 'https://github.com/$REPO_OWNER/$REPO_NAME';
+	public static var REPO_NAME:String = "dustin-build";
+	public static var REPO_OWNER:String = "bob312123";
+	public static var REPO_URL:String = 'https://github.com/bob-jones-cs/dustin-build';
 
 	/**
 	 * Preferred sound extension for the game's audio files.
@@ -157,7 +157,7 @@ class Flags {
 	public static var DEFAULT_HUD_ZOOM_LERP:Float = 0.05;
 
 	public static var USE_LEGACY_ZOOM_FACTOR:Null<Bool> = null;
-	
+
 	// Font configuration
 	public static var DEFAULT_FONT:String = "vcr.ttf";
 	public static var DEFAULT_FONT_SIZE:Int = 16;
