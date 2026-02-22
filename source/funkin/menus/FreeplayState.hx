@@ -347,7 +347,7 @@ class FreeplayState extends MusicBeatState
 		Options.freeplayLastVariation = curSong.variant;
 
 		PlayState.loadSong(event.song, event.difficulty, event.variant, event.opponentMode, event.coopMode);
-		FlxG.switchState(new PlayState());
+		FlxG.switchState(new SongLoadingState());
 	}
 
 	public function convertChart() {
@@ -501,7 +501,7 @@ class FreeplayState extends MusicBeatState
 		curDiffMetaKeys.resize(0);
 		curDifficulties = songs[curSelected].difficulties.copy();
 		for (i in 0...curDifficulties.length) curDiffMetaKeys.push(null);
-		
+
 		if (songs[curSelected].variants != null) {
 			var meta:ChartMetaData;
 			for (variant in songs[curSelected].variants) if ((meta = songs[curSelected].metas.get(variant)) != null) {

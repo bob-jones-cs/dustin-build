@@ -37,9 +37,10 @@ class MultiFramesCollection extends FlxFramesCollection
 
 		var atlasFrames:Array<MultiFramesCollection> = cast graphic.getFramesCollections(USER("MULTI"));
 
-		for (atlas in atlasFrames)
+		for (atlas in atlasFrames) {
 			if (atlas.border.equals(border))
 				return atlas;
+		}
 
 		return null;
 	}

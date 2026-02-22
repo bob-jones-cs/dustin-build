@@ -169,7 +169,7 @@ class PauseSubState extends MusicBeatSubstate
 				persistentDraw = false;
 				openSubState(new KeybindsOptions());
 			case "Change Options":
-				FlxG.switchState(new OptionsMenu((_) -> FlxG.switchState(new PlayState())));
+			FlxG.switchState(new OptionsMenu((_) -> FlxG.switchState(new SongLoadingState())));
 			case "Exit to charter":
 				FlxG.switchState(new Charter(PlayState.SONG.meta.name, PlayState.difficulty, PlayState.variation, false));
 			case "Exit to menu":

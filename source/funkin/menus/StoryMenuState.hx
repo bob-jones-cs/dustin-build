@@ -288,7 +288,7 @@ class StoryMenuState extends MusicBeatState {
 
 		new FlxTimer().start(1, function(tmr:FlxTimer)
 		{
-			FlxG.switchState(new PlayState());
+			FlxG.switchState(new SongLoadingState());
 		});
 		weekSprites.members[event.weekID].startFlashing();
 	}

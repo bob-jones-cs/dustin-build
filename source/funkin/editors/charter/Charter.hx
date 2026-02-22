@@ -453,7 +453,7 @@ class Charter extends UIState {
 		rightEventsGroup.eventsRowText = rightEventRowText;
 
 		// thank you neo for pointing out im stupid -lunar
-		// this is future lunar i completely forgot what neo pointed out but hes awesome go follow him on twitter 
+		// this is future lunar i completely forgot what neo pointed out but hes awesome go follow him on twitter
 
 		add(gridBackdropDummy = new CameraHoverDummy(gridBackdrops, FlxPoint.weak(1, 0)));
 		selectionBox = new UISliceSprite(0, 0, 2, 2, 'editors/ui/selection');
@@ -931,7 +931,7 @@ class Charter extends UIState {
 					currentCursor = ARROW;
 				}
 			case NONE:
-				if (FlxG.mouse.justPressed) 
+				if (FlxG.mouse.justPressed)
 					FlxG.mouse.getWorldPosition(charterCamera, dragStartPos);
 				else if (FlxG.mouse.justPressedRight) {
 					closeCurrentContextMenu();
@@ -1868,7 +1868,7 @@ class Charter extends UIState {
 			if (PlayState.SONG.bookmarks != null)
 				bookmarks = PlayState.SONG.bookmarks;
 		} catch (e) {}
-		
+
 		return bookmarks;
 	}
 
@@ -1878,9 +1878,9 @@ class Charter extends UIState {
 			var currentBookmarks:Array<ChartBookmark> = getBookmarkList();
 			var newBookmarks:Array<ChartBookmark> = getBookmarkList();
 			newBookmarks.push({time: daStep, name: name, color: color.toWebString()});
-				
+
 			PlayState.SONG.bookmarks = newBookmarks;
-			updateBookmarks();	
+			updateBookmarks();
 			undos.addToUndo(CEditBookmarks(currentBookmarks, newBookmarks));
 		}
 
@@ -1905,7 +1905,7 @@ class Charter extends UIState {
 		{
 			var bars:Array<FlxSprite> = bs[0];
 			var text:UIText = bs[1];
-			
+
 			if (bars != null) {
 				for (spr in bars) {
 					if (spr == null) continue;
@@ -1959,7 +1959,7 @@ class Charter extends UIState {
 				0,
 				scrollBar.height
 			);
-			
+
 			var bookmarkspr = new FlxSprite(scrollBar.x - 10, yPos).makeSolid(40, 4, bookmarkcolor);
 			uiGroup.add(bookmarkspr);
 			sprites.push(bookmarkspr);
@@ -2022,7 +2022,7 @@ class Charter extends UIState {
 			newChilds.push(null);
 		}
 
-		
+
 		newChilds.push({
 			label: translate("song.muteInst"),
 			onSelect: _song_muteinst
@@ -2236,7 +2236,7 @@ class Charter extends UIState {
 		startTime = Conductor.songPosition;
 		PlayState.opponentMode = opponentMode;
 		PlayState.chartingMode = true;
-		FlxG.switchState(new PlayState());
+		FlxG.switchState(new SongLoadingState());
 	}
 
 	public inline function buildNote(note:CharterNote):ChartNote {

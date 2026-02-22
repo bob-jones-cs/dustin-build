@@ -204,12 +204,14 @@ class Paths
 	public static function getFrames(key:String, assetsPath:Bool = false, ?library:String, ?ext:String = null, ?animateSettings:FlxAnimateSettings) {
 		if (tempFramesCache.exists(key)) {
 			var frames = tempFramesCache[key];
-			if (frames != null && frames.parent != null && frames.parent.bitmap != null && frames.parent.bitmap.readable)
+			if (frames != null && frames.parent != null && frames.parent.bitmap != null && frames.parent.bitmap.readable) {
 				return frames;
-			else
+			} else {
 				tempFramesCache.remove(key);
+			}
 		}
-		return tempFramesCache[key] = loadFrames(assetsPath ? key : Paths.image(key, library, true, ext), false, null, false, ext, animateSettings);
+		var result = loadFrames(assetsPath ? key : Paths.image(key, library, true, ext), false, null, false, ext, animateSettings);
+		return tempFramesCache[key] = result;
 	}
 
 	/**
@@ -258,7 +260,7 @@ class Paths
 			if (frames != null)
 				return frames;
 
-			trace("no frames yet for multiple atlases!!");
+			trace("no frames yet for multiple atlases!! path=" + noExt);
 			var cur = 1;
 			var finalFrames = new MultiFramesCollection(graphic);
 			while(Assets.exists('$noExt/$cur.${ext}')) {

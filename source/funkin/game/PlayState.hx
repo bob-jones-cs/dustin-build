@@ -1796,7 +1796,7 @@ class PlayState extends MusicBeatState
 				registerSmoothTransition();
 
 				__loadSong(storyPlaylist[0], difficulty, storyVariations[0]);
-				FlxG.switchState(new PlayState());
+				FlxG.switchState(new SongLoadingState());
 			}
 		}
 		else if (chartingMode)
@@ -1953,7 +1953,7 @@ class PlayState extends MusicBeatState
 		gameAndCharsEvent("onNoteHit", event);
 
 		note.noSustainClip = !event.clipSustain;
-		
+
 		if (!event.cancelled) {
 			if (!note.isSustainNote) {
 				if (event.countScore) songScore += event.score;

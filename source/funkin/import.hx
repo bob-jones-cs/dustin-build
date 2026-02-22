@@ -10,6 +10,7 @@ import funkin.backend.utils.TranslationUtil as TU;
 import funkin.backend.system.Logs;
 import funkin.options.Options;
 import funkin.game.PlayState;
+import funkin.game.SongLoadingState;
 import funkin.backend.scripting.EventManager;
 
 import openfl.utils.Assets;
