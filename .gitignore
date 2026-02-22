@@ -10,6 +10,7 @@ docs/doc.xml
 mods/*
 addons/*
 !mods/readme.txt
+!mods/dustin
 addons/*
 !addons/readme.txt
 dev-libs/

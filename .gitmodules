@@ -1,0 +1,3 @@
+[submodule "mods/dustin"]
+	path = mods/dustin
+	url = https://github.com/bob-jones-cs/dustin-mod.git
