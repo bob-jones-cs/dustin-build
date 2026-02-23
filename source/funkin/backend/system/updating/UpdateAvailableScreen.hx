@@ -109,6 +109,12 @@ class UpdateAvailableScreen extends MusicBeatState {
 		super.update(elapsed);
 
 		destY = CoolUtil.bound(destY - (FlxG.mouse.wheel * 75), 0, Math.max(0, changeLogText.height - FlxG.height + versionCheckBG.height + 20 + optionsBG.height));
+
+		if (controls.UP)
+			destY = CoolUtil.bound(destY - 300 * elapsed, 0, Math.max(0, changeLogText.height - FlxG.height + versionCheckBG.height + 20 + optionsBG.height));
+		if (controls.DOWN)
+			destY = CoolUtil.bound(destY + 300 * elapsed, 0, Math.max(0, changeLogText.height - FlxG.height + versionCheckBG.height + 20 + optionsBG.height));
+
 		FlxG.camera.scroll.y = lerp(FlxG.camera.scroll.y, destY, 1/3);
 
 		if (controls.LEFT_P || controls.RIGHT_P) {
