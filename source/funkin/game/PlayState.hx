@@ -1276,8 +1276,15 @@ class PlayState extends MusicBeatState
 		final time = Conductor.songPosition + Conductor.songOffset;
 
 		if (!inst.playing) inst.play(true, time);
-		vocals.play(true, time);
-		for (strumLine in strumLines.members) strumLine.vocals.play(true, time);
+		// Avoid force-restarting playing vocals: play(true, time) destroys the
+		// audio source's stream buffers and triggers a full synchronous Vorbis
+		// decode on the main thread (50-60ms stall). Setting .time instead uses
+		// snapBuffersToTime's fast path which seeks within existing buffers.
+		if (vocals.playing) vocals.time = time; else vocals.play(true, time);
+		for (strumLine in strumLines.members) {
+			if (strumLine.vocals.playing) strumLine.vocals.time = time;
+			else strumLine.vocals.play(true, time);
+		}
 
 		gameAndCharsCall("onVocalsResync");
 	}
