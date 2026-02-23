@@ -24,6 +24,7 @@ import funkin.backend.scripting.events.gameplay.*;
 import funkin.backend.scripting.events.note.*;
 import funkin.backend.system.Conductor;
 import funkin.backend.system.RotatingSpriteGroup;
+import funkin.backend.utils.MemoryUtil;
 import funkin.editors.SaveWarning;
 import funkin.editors.charter.Charter;
 import funkin.editors.charter.CharterSelection;
@@ -812,7 +813,6 @@ class PlayState extends MusicBeatState
 			strLine.ID = i;
 			strumLines.add(strLine);
 		}
-
 		add(strumLines);
 
 		splashHandler = new SplashHandler();
@@ -913,6 +913,7 @@ class PlayState extends MusicBeatState
 			SaveWarning.warningFunc = saveWarn;
 			SaveWarning.saveFunc = () -> Charter.saveEverything(false);
 		}
+
 	}
 
 	@:dox(hide) public override function createPost() {
@@ -1065,6 +1066,15 @@ class PlayState extends MusicBeatState
 		gameAndCharsCall("onSongStart");
 		startingSong = false;
 
+		// Force a full GC before audio starts to prevent GC pauses during
+		// the first seconds of gameplay (stop-the-world stalls).
+		MemoryUtil.clearMajor();
+
+		// Disable GC during the beginning of the song to prevent
+		// stop-the-world pauses at CFFI safe points (buffer swap).
+		MemoryUtil.disable();
+		__gcDisabled = true;
+
 		inst.onComplete = endSong;
 
 		var time = (chartingMode && Charter.startHere) ? Charter.startTime : 0;
@@ -1078,6 +1088,12 @@ class PlayState extends MusicBeatState
 	}
 
 	public override function destroy() {
+		// Ensure GC is re-enabled if it was disabled during gameplay
+		if (__gcDisabled) {
+			MemoryUtil.enable();
+			__gcDisabled = false;
+		}
+
 		var notNull = stage != null;
 		if (notNull) PlayState.instance.gameAndCharsCall("onStageDestroy", [stage]);
 		scripts.call("destroy");
@@ -1372,10 +1388,18 @@ class PlayState extends MusicBeatState
 		}
 	}
 
+	var __gcDisabled:Bool = false;
+
 	@:dox(hide)
 	override public function update(elapsed:Float)
 	{
 		scripts.call("update", [elapsed]);
+
+		// Re-enable GC some time after the beginning of song playback
+		if (__gcDisabled && Conductor.songPosition > 20000) {
+			MemoryUtil.enable();
+			__gcDisabled = false;
+		}
 
 		if (inCutscene) {
 			super.update(elapsed);
