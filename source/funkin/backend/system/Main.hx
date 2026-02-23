@@ -190,6 +190,7 @@ class Main extends Sprite
 
 	public static function onFocus() {
 		_tickFocused = FlxG.game.ticks;
+		_suppressingFocusClick = true;
 	}
 
 	private static function onStateSwitch() {
@@ -197,6 +198,14 @@ class Main extends Sprite
 	}
 
 	public static function onPreUpdate() {
+		if (_suppressingFocusClick) {
+			if (!FlxG.mouse.pressed) {
+				_suppressingFocusClick = false;
+			} else {
+				FlxG.mouse.reset();
+			}
+		}
+
 		if (FlxG.save.data.disableMouse == true && !isEditorState()) {
 			FlxG.mouse.reset();
 			@:privateAccess {
@@ -255,6 +264,7 @@ class Main extends Sprite
 	}
 
 	private static var _tickFocused:Float = 0;
+	private static var _suppressingFocusClick:Bool = false;
 	public static function get_timeSinceFocus():Float {
 		return (FlxG.game.ticks - _tickFocused) / 1000;
 	}
