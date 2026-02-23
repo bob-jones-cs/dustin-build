@@ -140,6 +140,7 @@ class Main extends Sprite
 		FlxG.signals.focusGained.add(onFocus);
 		FlxG.signals.preStateSwitch.add(onStateSwitch);
 		FlxG.signals.postStateSwitch.add(onStateSwitchPost);
+		FlxG.signals.preUpdate.add(onPreUpdate);
 		FlxG.signals.postUpdate.add(onUpdate);
 
 		FlxG.mouse.useSystemCursor = true;
@@ -193,6 +194,26 @@ class Main extends Sprite
 
 	private static function onStateSwitch() {
 		scaleMode.resetSize();
+	}
+
+	public static function onPreUpdate() {
+		if (FlxG.save.data.disableMouse == true && !isEditorState()) {
+			FlxG.mouse.reset();
+			@:privateAccess {
+				FlxG.mouse.wheel = 0;
+				FlxG.mouse._globalScreenX = -9999;
+				FlxG.mouse._globalScreenY = -9999;
+				FlxG.mouse.screenX = -9999;
+				FlxG.mouse.screenY = -9999;
+				FlxG.mouse.x = -9999;
+				FlxG.mouse.y = -9999;
+			}
+		}
+	}
+
+	private static function isEditorState():Bool {
+		var className = Type.getClassName(Type.getClass(FlxG.state));
+		return className != null && StringTools.startsWith(className, "funkin.editors.");
 	}
 
 	public static function onUpdate() {
