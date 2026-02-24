@@ -1429,13 +1429,18 @@ class PlayState extends MusicBeatState
 	@:noCompletion var __lastAccuracy:Float = -999.0;
 	@:noCompletion var __lastComboBreaks:Bool = false;
 	@:noCompletion var __lastRatingRef:ComboRating = null;
+	@:noCompletion var __elapsedArgs:Array<Dynamic> = [0.0];
+	@:noCompletion var __stepArgs:Array<Dynamic> = [0];
+	@:noCompletion var __beatArgs:Array<Dynamic> = [0];
+	@:noCompletion var __measureArgs:Array<Dynamic> = [0];
 
 	var __gcDisabled:Bool = false;
 
 	@:dox(hide)
 	override public function update(elapsed:Float)
 	{
-		scripts.call("update", [elapsed]);
+		__elapsedArgs[0] = elapsed;
+		scripts.call("update", __elapsedArgs);
 
 		// Re-enable GC some time after the beginning of song playback
 		if (__gcDisabled && Conductor.songPosition > 20000) {
@@ -1445,7 +1450,8 @@ class PlayState extends MusicBeatState
 
 		if (inCutscene) {
 			super.update(elapsed);
-			scripts.call("postUpdate", [elapsed]);
+			__elapsedArgs[0] = elapsed;
+			scripts.call("postUpdate", __elapsedArgs);
 			return;
 		}
 
@@ -1535,7 +1541,8 @@ class PlayState extends MusicBeatState
 
 		super.update(elapsed);
 
-		scripts.call("postUpdate", [elapsed]);
+		__elapsedArgs[0] = elapsed;
+		scripts.call("postUpdate", __elapsedArgs);
 	}
 
 	override function draw() {
@@ -2158,14 +2165,16 @@ class PlayState extends MusicBeatState
 	override function stepHit(curStep:Int)
 	{
 		super.stepHit(curStep);
-		scripts.call("stepHit", [curStep]);
+		__stepArgs[0] = curStep;
+		scripts.call("stepHit", __stepArgs);
 	}
 
 	@:dox(hide)
 	override function measureHit(curMeasure:Int)
 	{
 		super.measureHit(curMeasure);
-		scripts.call("measureHit", [curMeasure]);
+		__measureArgs[0] = curMeasure;
+		scripts.call("measureHit", __measureArgs);
 	}
 
 	@:dox(hide)
@@ -2178,7 +2187,8 @@ class PlayState extends MusicBeatState
 				if (icon.bump != null)
 					icon.bump();
 
-		scripts.call("beatHit", [curBeat]);
+		__beatArgs[0] = curBeat;
+		scripts.call("beatHit", __beatArgs);
 	}
 
 	public function addScript(file:String) {
