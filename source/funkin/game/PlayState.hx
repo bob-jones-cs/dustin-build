@@ -645,10 +645,10 @@ class PlayState extends MusicBeatState
 	}
 
 	public inline function callOnCharacters(func:String, ?parameters:Array<Dynamic>) {
-		if(strumLines != null) strumLines.forEachAlive(function (strLine:StrumLine) {
-			if (strLine.characters != null) for (character in strLine.characters)
-				if (character != null) character.scripts.call(func, parameters);
-		});
+		if (strumLines != null) for (strLine in strumLines.members)
+			if (strLine != null && strLine.alive && strLine.exists && strLine.characters != null)
+				for (character in strLine.characters)
+					if (character != null) character.scripts.call(func, parameters);
 	}
 
 	public inline function gameAndCharsCall(func:String, ?parameters:Array<Dynamic>, ?charsFunc:String) {
@@ -656,9 +656,12 @@ class PlayState extends MusicBeatState
 		callOnCharacters(charsFunc != null ? charsFunc : func, parameters);
 	}
 
+	@:noCompletion var __eventArr:Array<Dynamic> = [null];
+
 	public inline function gameAndCharsEvent<T:CancellableEvent>(func:String, ?event:T, ?charsFunc:String):T {
 		scripts.event(func, event);
-		callOnCharacters(charsFunc != null ? charsFunc : func, [event]);
+		__eventArr[0] = event;
+		callOnCharacters(charsFunc != null ? charsFunc : func, __eventArr);
 		return event;
 	}
 
