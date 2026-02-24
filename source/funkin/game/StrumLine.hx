@@ -270,8 +270,13 @@ class StrumLine extends FlxTypedGroup<Strum> {
 
 			if (cur == null
 				|| notePenalty < curPenalty
-				|| (notePenalty == curPenalty && noteDist < curDist))
+				|| (notePenalty == curPenalty && noteDist < curDist)) {
+				if (cur != null && Math.abs(cur.strumTime - note.strumTime) <= 2)
+					deleteNote(cur);
 				__notePerStrum[note.strumID] = note;
+			} else if (cur != null && Math.abs(cur.strumTime - note.strumTime) <= 2) {
+				deleteNote(note);
+			}
 		}
 	}
 
