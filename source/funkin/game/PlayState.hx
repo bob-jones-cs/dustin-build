@@ -467,6 +467,29 @@ class PlayState extends MusicBeatState
 	private inline function get_maxCamZoom() return Math.isNaN(maxCamZoom) ? defaultCamZoom + (camZoomingMult * camGameZoomMult) : maxCamZoom;
 
 	/**
+	 * Per-strum-line camera zoom targets. Index corresponds to strum line index
+	 * (typically 0 = opponent, 1 = player, 2 = girlfriend).
+	 * A value of `Math.NaN` means "use defaultCamZoom" for that strum line.
+	 * Populated from stage XML attributes `opponentZoom`, `playerZoom`, `gfZoom`.
+	 */
+	public var strumLineZooms:Array<Float> = [];
+
+	/**
+	 * Multiplier applied to `defaultHudZoom` when lerping the HUD camera zoom.
+	 */
+	public var camHudZoomMult:Float = 1;
+
+	/**
+	 * Multiplier applied to the camera zoom lerp speed.
+	 */
+	public var camZoomLerpMult:Float = 1;
+
+	/**
+	 * When true, ignores per-strum-line zoom overrides and always uses `defaultCamZoom`.
+	 */
+	public var forceDefaultCamZoom:Bool = false;
+
+	/**
 	 * Zoom for the pixel assets.
 	 */
 	public static var daPixelZoom:Float = Flags.PIXEL_ART_SCALE;
@@ -1685,8 +1708,13 @@ class PlayState extends MusicBeatState
 				camHUD.zoomMultiplier = camZoomingMult * camHUDZoomMult + defaultZoom;
 				camZoomingMult += defaultZoom;
 			}
-			FlxG.camera.zoom = lerp(FlxG.camera.zoom, defaultCamZoom, camGameZoomLerp);
-			camHUD.zoom = lerp(camHUD.zoom, defaultHudZoom, camHUDZoomLerp);
+			var targetCamZoom:Float = defaultCamZoom;
+			if (!forceDefaultCamZoom && curCameraTarget >= 0 && curCameraTarget < strumLineZooms.length) {
+				var slz = strumLineZooms[curCameraTarget];
+				if (!Math.isNaN(slz)) targetCamZoom = slz;
+			}
+			FlxG.camera.zoom = lerp(FlxG.camera.zoom, targetCamZoom, camGameZoomLerp * camZoomLerpMult);
+			camHUD.zoom = lerp(camHUD.zoom, defaultHudZoom * camHudZoomMult, camHUDZoomLerp);
 		}
 		#if PROFILING __tCamera = Sys.time() - __tPhase; #end
 

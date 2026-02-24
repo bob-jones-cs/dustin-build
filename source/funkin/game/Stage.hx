@@ -70,7 +70,7 @@ class Stage extends FlxBasic implements IBeatReceiver {
 		if (autoLoad) loadXml(stageXML);
 	}
 
-	public static var DEFAULT_ATTRIBUTES:Array<String> = ["name", "startCamPosX", "startCamPosY", "zoom", "folder"];
+	public static var DEFAULT_ATTRIBUTES:Array<String> = ["name", "startCamPosX", "startCamPosY", "zoom", "folder", "opponentZoom", "playerZoom", "gfZoom"];
 
 	public function loadXml(xml:Access, forceLoadAll:Bool = false) {
 		if (PlayState.instance == state) {
@@ -93,6 +93,16 @@ class Stage extends FlxBasic implements IBeatReceiver {
 				if(xml.has.startCamPosX) PlayState.instance.camFollow.x = startCam.x;
 				if(xml.has.startCamPosY) PlayState.instance.camFollow.y = startCam.y;
 				if(xml.has.zoom) PlayState.instance.defaultCamZoom = defaultZoom;
+
+				// Per-strum-line camera zoom overrides
+				var oppZoom = Std.parseFloat(xml.getAtt("opponentZoom"));
+				var plrZoom = Std.parseFloat(xml.getAtt("playerZoom"));
+				var gfZoom = Std.parseFloat(xml.getAtt("gfZoom"));
+				PlayState.instance.strumLineZooms = [
+					oppZoom.isNotNull() ? oppZoom : Math.NaN,
+					plrZoom.isNotNull() ? plrZoom : Math.NaN,
+					gfZoom.isNotNull()  ? gfZoom  : Math.NaN
+				];
 			}
 			if (xml.has.folder) {
 				spritesParentFolder = xml.att.folder;
