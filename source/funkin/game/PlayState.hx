@@ -1095,6 +1095,8 @@ class PlayState extends MusicBeatState
 		__profFrameNum = 0;
 		__profFrameRows = [];
 		__profEventRows = [];
+		__profExitHandler = (_:Int) -> __profFlush();
+		openfl.Lib.application.onExit.add(__profExitHandler);
 		#end
 
 		inst.onComplete = endSong;
@@ -1111,6 +1113,10 @@ class PlayState extends MusicBeatState
 
 	public override function destroy() {
 		#if PROFILING
+		if (__profExitHandler != null) {
+			openfl.Lib.application.onExit.remove(__profExitHandler);
+			__profExitHandler = null;
+		}
 		__profFlush();
 		#end
 
@@ -1461,6 +1467,7 @@ class PlayState extends MusicBeatState
 	var __profDrawSuper:Float = 0;
 	var __profDrawPost:Float = 0;
 	var __profLastDrawEnd:Float = 0;
+	var __profExitHandler:Int->Void;
 
 	function __profRecordFrame(
 		elapsed:Float, __tFrame:Float, __tScriptsPre:Float, __tRating:Float, __tCamZoom:Float,
