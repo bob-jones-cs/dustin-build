@@ -11,6 +11,7 @@ class ScriptPack extends Script {
 	public var scripts:Array<Script> = [];
 	public var additionalDefaultVariables:Map<String, Dynamic> = [];
 	public var publicVariables:Map<String, Dynamic> = [];
+	@:noCompletion var __eventArgs:Array<Dynamic> = [null];
 	public var parent:Dynamic = null;
 
 	/**
@@ -95,12 +96,14 @@ class ScriptPack extends Script {
 	 * @return (modified by scripts)
 	 */
 	public inline function event<T:CancellableEvent>(func:String, event:T):T {
+		__eventArgs[0] = event;
 		for(e in scripts) {
 			if(!e.active) continue;
 
-			e.call(func, [event]);
+			e.call(func, __eventArgs);
 			if (event.cancelled && !event.__continueCalls) break;
 		}
+		__eventArgs[0] = null;
 		return event;
 	}
 
