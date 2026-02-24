@@ -1394,23 +1394,41 @@ class PlayState extends MusicBeatState
 	private var TEXT_GAME_ACCURACY = TU.getRaw("game.accuracy");
 
 	dynamic function updateRatingStuff() {
-		scoreTxt.text = TEXT_GAME_SCORE.format([songScore]);
-		missesTxt.text = (comboBreaks ? TEXT_GAME_COMBOBREAKS : TEXT_GAME_MISSES).format([misses]);
+		if (songScore != __lastScore) {
+			__lastScore = songScore;
+			scoreTxt.text = TEXT_GAME_SCORE.format([songScore]);
+		}
+		if (misses != __lastMisses || comboBreaks != __lastComboBreaks) {
+			__lastMisses = misses;
+			__lastComboBreaks = comboBreaks;
+			missesTxt.text = (comboBreaks ? TEXT_GAME_COMBOBREAKS : TEXT_GAME_MISSES).format([misses]);
+		}
 
 		if (curRating == null)
 			curRating = new ComboRating(0, "[N/A]", 0xFF888888);
 
-		@:privateAccess {
-			accFormat.format.color = curRating.color;
-			accuracyTxt.text = TEXT_GAME_ACCURACY.format([accuracy < 0 ? "-%" : '${CoolUtil.quantize(accuracy * 100, 100)}%', curRating.rating]);
+		if (accuracy != __lastAccuracy || curRating != __lastRatingRef) {
+			__lastAccuracy = accuracy;
+			__lastRatingRef = curRating;
+			@:privateAccess {
+				accFormat.format.color = curRating.color;
+				accuracyTxt.text = TEXT_GAME_ACCURACY.format([accuracy < 0 ? "-%" : '${CoolUtil.quantize(accuracy * 100, 100)}%', curRating.rating]);
 
-			for (i => frmtRange in accuracyTxt._formatRanges) if (frmtRange.format == accFormat) {
-				accuracyTxt._formatRanges[i].range.start = accuracyTxt.text.length - curRating.rating.length;
-				accuracyTxt._formatRanges[i].range.end = accuracyTxt.text.length;
-				break;
+				for (i => frmtRange in accuracyTxt._formatRanges) if (frmtRange.format == accFormat) {
+					accuracyTxt._formatRanges[i].range.start = accuracyTxt.text.length - curRating.rating.length;
+					accuracyTxt._formatRanges[i].range.end = accuracyTxt.text.length;
+					break;
+				}
 			}
 		}
 	}
+
+	// Dirty-flag tracking for updateRatingStuff
+	@:noCompletion var __lastScore:Int = -999999;
+	@:noCompletion var __lastMisses:Int = -1;
+	@:noCompletion var __lastAccuracy:Float = -999.0;
+	@:noCompletion var __lastComboBreaks:Bool = false;
+	@:noCompletion var __lastRatingRef:ComboRating = null;
 
 	var __gcDisabled:Bool = false;
 
