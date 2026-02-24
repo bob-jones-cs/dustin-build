@@ -41,6 +41,7 @@ class Strum extends FlxSprite {
 	public var noteAngle:Null<Float> = null;
 
 	public var lastDrawCameras(default, null):Array<FlxCamera> = [];
+	@:noCompletion var __cachedCamerasRef:Array<FlxCamera> = null;
 
 	// Copy fields
 	public var copyStrumCamera:Bool = true;
@@ -128,7 +129,11 @@ class Strum extends FlxSprite {
 	}
 
 	public override function draw() {
-		lastDrawCameras = cameras.copy();
+		var cur = cameras;
+		if (cur != __cachedCamerasRef) {
+			__cachedCamerasRef = cur;
+			lastDrawCameras = cur.copy();
+		}
 		super.draw();
 	}
 
