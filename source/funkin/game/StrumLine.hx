@@ -304,7 +304,8 @@ class StrumLine extends FlxTypedGroup<Strum> {
 		__justPressed = CoolUtil.getDefault(event.justPressed, []);
 		__justReleased = CoolUtil.getDefault(event.justReleased, []);
 
-		__notePerStrum = cast new haxe.ds.Vector(members.length); // [for(_ in 0...members.length) null];
+		if (__notePerStrum.length != members.length) __notePerStrum.resize(members.length);
+		for (k in 0...members.length) __notePerStrum[k] = null;
 
 		if (__pressed.contains(true)) {
 			if (__justPressed.contains(true)) {
@@ -325,9 +326,9 @@ class StrumLine extends FlxTypedGroup<Strum> {
 			notes.forEachAlive(__inputProcessPressed);
 		}
 
-		forEach(function(str:Strum) {
-			str.updatePlayerInput(__pressed[str.ID], __justPressed[str.ID], __justReleased[str.ID]);
-		});
+		for (str in members)
+			if (str != null && str.exists && str.alive)
+				str.updatePlayerInput(__pressed[str.ID], __justPressed[str.ID], __justReleased[str.ID]);
 
 		PlayState.instance.gameAndCharsCall("onPostInputUpdate");
 	}
