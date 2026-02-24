@@ -36,6 +36,9 @@ import funkin.menus.*;
 import funkin.backend.week.WeekData;
 import funkin.savedata.FunkinSave;
 import haxe.io.Path;
+#if cpp
+import cpp.vm.Gc;
+#end
 
 using StringTools;
 
@@ -1070,6 +1073,11 @@ class PlayState extends MusicBeatState
 		// the first seconds of gameplay (stop-the-world stalls).
 		MemoryUtil.clearMajor();
 
+		// Raise GC minimum working memory to reduce mid-song collections.
+		#if cpp
+		Gc.setMinimumWorkingMemory(64 * 1024 * 1024);
+		#end
+
 		// Disable GC during the beginning of the song to prevent
 		// stop-the-world pauses at CFFI safe points (buffer swap).
 		MemoryUtil.disable();
@@ -1120,6 +1128,12 @@ class PlayState extends MusicBeatState
 		instance = null;
 
 		Note.__customNoteTypeExists = [];
+
+		// Force a full GC + compact after all cleanup to reclaim the heap
+		// and reduce fragmentation before the next state. Safe because
+		// super.destroy() already released all objects, and no future
+		// SongLoadingState preloading has started yet.
+		MemoryUtil.clearMajor();
 	}
 
 	@:dox(hide) @:deprecated("scrollSpeedTween is deprecated, use eventsTween['scrollSpeed'] instead")
