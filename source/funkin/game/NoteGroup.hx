@@ -90,6 +90,8 @@ class NoteGroup extends FlxTypedGroup<Note> {
 		return members[length - 1 - id];
 	}
 
+	@:noCompletion var __aliveOnly:Bool = false;
+
 	public override function forEach(noteFunc:Note->Void, recursive:Bool = false) {
 		i = length-1;
 		__loopSprite = null;
@@ -101,15 +103,16 @@ class NoteGroup extends FlxTypedGroup<Note> {
 		while(i >= 0) {
 			__loopSprite = members[i--];
 			if (__loopSprite == null || !__loopSprite.exists) continue;
+			if (__aliveOnly && !__loopSprite.alive) continue;
 			if (__loopSprite.strumTime > __time) break;
 			noteFunc(__loopSprite);
 		}
 		__currentlyLooping = oldCur;
 	}
 	public override function forEachAlive(noteFunc:Note->Void, recursive:Bool = false) {
-		forEach(function(note) {
-			if (note.alive) noteFunc(note);
-		}, recursive);
+		__aliveOnly = true;
+		forEach(noteFunc, recursive);
+		__aliveOnly = false;
 	}
 
 	public override function remove(Object:Note, Splice:Bool = false):Note
