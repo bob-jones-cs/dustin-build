@@ -117,6 +117,9 @@
 	<!-- Comment this out to disable dark mode windows -->
 	<define name="DARK_MODE_WINDOW"/>
 
+	<!-- Uncomment this to enable per-frame gameplay profiling (CSV output) -->
+	<!-- <haxedef name="PROFILING" if="cpp" /> -->
+
 	<!-- Disable a optimization, to allow reflection to use more functions -->
 	<define name="FLX_NO_GENERIC" />
 

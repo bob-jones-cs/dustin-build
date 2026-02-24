@@ -20,6 +20,9 @@ final class CommandLineHandler {
 					Sys.println("-nocolor             | Disables colors in the terminal");
 					Sys.println("-nogpubitmap         | Forces GPU only bitmaps off");
 					Sys.println("-nocwdfix            | Turns off automatic working directory fix");
+						#if PROFILING
+						Sys.println("-profiling-dir [path] | Sets the profiling output directory");
+						#end
 					Sys.exit(0);
 				#if MOD_SUPPORT
 				case "-m" | "-mod" | "-currentmod":
@@ -56,6 +59,17 @@ final class CommandLineHandler {
 						Sys.exit(1);
 					}
 				#end
+					#if PROFILING
+					case "-profiling-dir":
+						i++;
+						var arg = cmd[i];
+						if (arg == null) {
+							Sys.println("[ERROR] You need to specify the profiling output directory");
+							Sys.exit(1);
+						} else {
+							Main.profilingOutputDir = arg;
+						}
+					#end
 				case "-nocolor":
 					Main.noTerminalColor = true;
 				case "-nogpubitmap":

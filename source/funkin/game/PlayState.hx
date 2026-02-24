@@ -36,6 +36,10 @@ import funkin.menus.*;
 import funkin.backend.week.WeekData;
 import funkin.savedata.FunkinSave;
 import haxe.io.Path;
+#if PROFILING
+import sys.io.File;
+import sys.FileSystem;
+#end
 #if cpp
 import cpp.vm.Gc;
 #end
@@ -1086,6 +1090,13 @@ class PlayState extends MusicBeatState
 		MemoryUtil.disable();
 		__gcDisabled = true;
 
+		#if PROFILING
+		__profActive = true;
+		__profFrameNum = 0;
+		__profFrameRows = [];
+		__profEventRows = [];
+		#end
+
 		inst.onComplete = endSong;
 
 		var time = (chartingMode && Charter.startHere) ? Charter.startTime : 0;
@@ -1099,6 +1110,10 @@ class PlayState extends MusicBeatState
 	}
 
 	public override function destroy() {
+		#if PROFILING
+		__profFlush();
+		#end
+
 		// Ensure GC is re-enabled if it was disabled during gameplay
 		if (__gcDisabled) {
 			MemoryUtil.enable();
@@ -1436,11 +1451,128 @@ class PlayState extends MusicBeatState
 
 	var __gcDisabled:Bool = false;
 
+	#if PROFILING
+	var __profFrameNum:Int = 0;
+	var __profActive:Bool = false;
+	var __profFrameRows:Array<String> = [];
+	var __profEventRows:Array<String> = [];
+	var __profDrawTime:Float = 0;
+	var __profDrawScripts:Float = 0;
+	var __profDrawSuper:Float = 0;
+	var __profDrawPost:Float = 0;
+	var __profLastDrawEnd:Float = 0;
+
+	function __profRecordFrame(
+		elapsed:Float, __tFrame:Float, __tScriptsPre:Float, __tRating:Float, __tCamZoom:Float,
+		__tIcons:Float, __tSync:Float, __tEvents:Float, __tCamera:Float,
+		__tInput:Float, __tSuperUpdate:Float, __tScriptsPost:Float,
+		__gcCurStartMb:Float
+	):Void {
+		if (!__profActive) return;
+		var totalUpdateMs = (Sys.time() - __tFrame) * 1000;
+		var drawMs = __profDrawTime * 1000;
+		var totalMs = totalUpdateMs + drawMs;
+		var memMb:Float = 0;
+		var gcCurMb:Float = 0;
+		var gcResMb:Float = 0;
+		#if cpp
+		memMb = Gc.memInfo64(Gc.MEM_INFO_USAGE) / (1024.0 * 1024.0);
+		gcCurMb = Gc.memInfo64(Gc.MEM_INFO_CURRENT) / (1024.0 * 1024.0);
+		gcResMb = Gc.memInfo64(Gc.MEM_INFO_RESERVED) / (1024.0 * 1024.0);
+		#end
+		var frameGapMs:Float = (__profLastDrawEnd > 0) ? (__tFrame - __profLastDrawEnd) * 1000 : 0;
+		var tweenCount:Int = 0;
+		@:privateAccess { tweenCount = FlxTween.globalManager._tweens.length; }
+		var displayCount:Int = members.length;
+		var gcCollected:Bool = gcCurMb < __gcCurStartMb - 1;
+		__profFrameRows.push('${__profFrameNum},${Sys.time()},${Conductor.songPosition},${elapsed * 1000},${__tScriptsPre * 1000},${__tRating * 1000},${__tCamZoom * 1000},${__tIcons * 1000},${__tSync * 1000},${__tEvents * 1000},${__tCamera * 1000},${__tInput * 1000},${__tSuperUpdate * 1000},${__tScriptsPost * 1000},${drawMs},${totalMs},${memMb},${gcCurMb},${gcResMb},${__profDrawScripts * 1000},${__profDrawSuper * 1000},${__profDrawPost * 1000},${frameGapMs},${__gcCurStartMb},${tweenCount},${displayCount}\n');
+
+		if (totalMs > 12) {
+			var parts:Array<String> = [];
+			if (__tScriptsPre * 1000 > 1) parts.push('scripts_pre=${Std.int(__tScriptsPre * 1000)}');
+			if (__tRating * 1000 > 1) parts.push('rating=${Std.int(__tRating * 1000)}');
+			if (__tCamZoom * 1000 > 1) parts.push('cam_zoom=${Std.int(__tCamZoom * 1000)}');
+			if (__tIcons * 1000 > 1) parts.push('icons=${Std.int(__tIcons * 1000)}');
+			if (__tSync * 1000 > 1) parts.push('sync=${Std.int(__tSync * 1000)}');
+			if (__tEvents * 1000 > 1) parts.push('events=${Std.int(__tEvents * 1000)}');
+			if (__tCamera * 1000 > 1) parts.push('camera=${Std.int(__tCamera * 1000)}');
+			if (__tInput * 1000 > 1) parts.push('input=${Std.int(__tInput * 1000)}');
+			if (__tSuperUpdate * 1000 > 1) parts.push('super_upd=${Std.int(__tSuperUpdate * 1000)}');
+			if (__tScriptsPost * 1000 > 1) parts.push('scripts_post=${Std.int(__tScriptsPost * 1000)}');
+			if (drawMs > 1) parts.push('draw=${Std.int(drawMs)}');
+			if (drawMs > 5) parts.push('(d_scr=${Std.int(__profDrawScripts * 1000)},d_sup=${Std.int(__profDrawSuper * 1000)},d_pst=${Std.int(__profDrawPost * 1000)})');
+			if (frameGapMs > 5) parts.push('gap=${Std.int(frameGapMs)}');
+			if (gcCollected) parts.push('GC_COLLECTED(${Std.int(__gcCurStartMb)}\u2192${Std.int(gcCurMb)}MB)');
+			trace('SLOW FRAME #${__profFrameNum} at ${Std.int(Conductor.songPosition)}ms: ${Std.int(totalMs)}ms [${parts.join(", ")}] mem=${Std.int(memMb)}MB gc_cur=${Std.int(gcCurMb)}MB gc_res=${Std.int(gcResMb)}MB tweens=${tweenCount} objs=${displayCount}');
+		}
+
+		__profFrameNum++;
+	}
+
+	function __profFlush():Void {
+		if (!__profActive) return;
+		__profActive = false;
+		try {
+			var dir = Main.profilingOutputDir;
+			if (!FileSystem.exists(dir))
+				FileSystem.createDirectory(dir);
+
+			var fb = new StringBuf();
+			fb.add("frame,wall_s,song_ms,elapsed_ms,scripts_pre_ms,rating_ms,cam_zoom_ms,icons_ms,sync_ms,events_ms,camera_ms,input_ms,super_update_ms,scripts_post_ms,draw_ms,total_ms,mem_mb,gc_current_mb,gc_reserved_mb,draw_scripts_ms,draw_super_ms,draw_post_ms,frame_gap_ms,gc_current_start_mb,tween_count,display_count\n");
+			for (r in __profFrameRows) fb.add(r);
+			File.saveContent('${dir}/profiling_frames.csv', fb.toString());
+
+			var eb = new StringBuf();
+			eb.add("frame,song_ms,event_name,event_time_ms,duration_ms\n");
+			for (r in __profEventRows) eb.add(r);
+			File.saveContent('${dir}/profiling_events.csv', eb.toString());
+
+			trace('Profiling data written: ${__profFrameRows.length} frames, ${__profEventRows.length} events \u2192 ${dir}/');
+		} catch (e:Dynamic) {
+			trace('Profiling flush failed: $e');
+		}
+		__profFrameRows = [];
+		__profEventRows = [];
+	}
+	#end
+
 	@:dox(hide)
 	override public function update(elapsed:Float)
 	{
+		#if PROFILING
+		var __tFrame = Sys.time();
+		var __tPhase = __tFrame;
+		var __gcCurStartMb:Float = 0;
+		#if cpp
+		__gcCurStartMb = Gc.memInfo64(Gc.MEM_INFO_CURRENT) / (1024.0 * 1024.0);
+		#end
+		var __tScriptsPre:Float = 0;
+		var __tRating:Float = 0;
+		var __tCamZoom:Float = 0;
+		var __tIcons:Float = 0;
+		var __tSync:Float = 0;
+		var __tEvents:Float = 0;
+		var __tCamera:Float = 0;
+		var __tInput:Float = 0;
+		var __tSuperUpdate:Float = 0;
+		var __tScriptsPost:Float = 0;
+
+		{
+			var __scriptsCopy = scripts.scripts.copy();
+			for (__s in __scriptsCopy) {
+				if (__s == null || !__s.active) continue;
+				var __ts0 = Sys.time();
+				__s.call("update", [elapsed]);
+				var __tsDt = Sys.time() - __ts0;
+				if (__tsDt > 0.003)
+					trace('SLOW SCRIPT UPDATE: "${__s.fileName}" took ${Std.int(__tsDt * 1000)}ms (song=${Std.int(Conductor.songPosition)}ms)');
+			}
+		}
+		__tScriptsPre = Sys.time() - __tPhase;
+		#else
 		__elapsedArgs[0] = elapsed;
 		scripts.call("update", __elapsedArgs);
+		#end
 
 		// Re-enable GC some time after the beginning of song playback
 		if (__gcDisabled && Conductor.songPosition > 20000) {
@@ -1449,18 +1581,28 @@ class PlayState extends MusicBeatState
 		}
 
 		if (inCutscene) {
+			#if PROFILING __tPhase = Sys.time(); #end
 			super.update(elapsed);
+			#if PROFILING __tSuperUpdate = Sys.time() - __tPhase; #end
+			#if PROFILING __tPhase = Sys.time(); #end
 			__elapsedArgs[0] = elapsed;
 			scripts.call("postUpdate", __elapsedArgs);
+			#if PROFILING
+			__tScriptsPost = Sys.time() - __tPhase;
+			__profRecordFrame(elapsed, __tFrame, __tScriptsPre, 0, 0, 0, 0, 0, 0, 0, __tSuperUpdate, __tScriptsPost, __gcCurStartMb);
+			#end
 			return;
 		}
 
+		#if PROFILING __tPhase = Sys.time(); #end
 		if (updateRatingStuff != null)
 			updateRatingStuff();
+		#if PROFILING __tRating = Sys.time() - __tPhase; #end
 
 		if (canAccessDebugMenus && chartingMode && controls.DEV_ACCESS)
 			FlxG.switchState(new funkin.editors.charter.Charter(SONG.meta.name, difficulty, variation, false));
 
+		#if PROFILING __tPhase = Sys.time(); #end
 		if (Options.camZoomOnBeat && camZooming) {
 			var beat = Conductor.getBeats(camZoomingEvery, camZoomingInterval, camZoomingOffset);
 			if (camZoomingLastBeat != beat) {
@@ -1474,7 +1616,9 @@ class PlayState extends MusicBeatState
 				}
 			}
 		}
+		#if PROFILING __tCamZoom = Sys.time() - __tPhase; #end
 
+		#if PROFILING __tPhase = Sys.time(); #end
 		if (doIconBop)
 			for (icon in iconArray)
 				if (icon.updateBump != null)
@@ -1482,7 +1626,9 @@ class PlayState extends MusicBeatState
 
 		if (updateIconPositions != null)
 			updateIconPositions();
+		#if PROFILING __tIcons = Sys.time() - __tPhase; #end
 
+		#if PROFILING __tPhase = Sys.time(); #end
 		if (startingSong) {
 			if (startedCountdown && (Conductor.songPosition += Conductor.songOffset + elapsed * 1000) >= 0) {
 				Conductor.songPosition = Conductor.songOffset;
@@ -1501,13 +1647,27 @@ class PlayState extends MusicBeatState
 
 			if (isOffsync) resyncVocals();
 		}
+		#if PROFILING __tSync = Sys.time() - __tPhase; #end
 
-		while(events.length > 0 && events.last().time <= Conductor.songPosition)
-			executeEvent(events.pop());
+		#if PROFILING __tPhase = Sys.time(); #end
+		while(events.length > 0 && events.last().time <= Conductor.songPosition) {
+			var ev = events.pop();
+			#if PROFILING var t0 = Sys.time(); #end
+			executeEvent(ev);
+			#if PROFILING
+			var dt = Sys.time() - t0;
+			if (__profActive)
+				__profEventRows.push('${__profFrameNum},${Conductor.songPosition},"${ev.name}",${ev.time},${dt * 1000}\n');
+			if (dt > 0.002)
+				trace('Event "${ev.name}" at ${ev.time}ms took ${Std.int(dt * 1000)}ms');
+			#end
+		}
+		#if PROFILING __tEvents = Sys.time() - __tPhase; #end
 
 		if (controls.PAUSE && startedCountdown && canPause)
 			pauseGame();
 
+		#if PROFILING __tPhase = Sys.time(); #end
 		if (generatedMusic)
 			moveCamera();
 
@@ -1521,6 +1681,7 @@ class PlayState extends MusicBeatState
 			FlxG.camera.zoom = lerp(FlxG.camera.zoom, defaultCamZoom, camGameZoomLerp);
 			camHUD.zoom = lerp(camHUD.zoom, defaultHudZoom, camHUDZoomLerp);
 		}
+		#if PROFILING __tCamera = Sys.time() - __tPhase; #end
 
 		// RESET = Quick Game Over Screen
 		if (startedCountdown && controls.RESET)
@@ -1531,25 +1692,44 @@ class PlayState extends MusicBeatState
 		else if (health >= maxHealth && canDadDie)
 			gameOver(dad);
 
+		#if PROFILING __tPhase = Sys.time(); #end
 		if (!inCutscene)
 			keyShit();
+		#if PROFILING __tInput = Sys.time() - __tPhase; #end
 
 		#if debug
 		if (generatedMusic && FlxG.keys.justPressed.ONE)
 			endSong();
 		#end
 
+		#if PROFILING __tPhase = Sys.time(); #end
 		super.update(elapsed);
+		#if PROFILING __tSuperUpdate = Sys.time() - __tPhase; #end
 
 		__elapsedArgs[0] = elapsed;
+		#if PROFILING __tPhase = Sys.time(); #end
 		scripts.call("postUpdate", __elapsedArgs);
+		#if PROFILING
+		__tScriptsPost = Sys.time() - __tPhase;
+		__profRecordFrame(elapsed, __tFrame, __tScriptsPre, __tRating, __tCamZoom, __tIcons, __tSync, __tEvents, __tCamera, __tInput, __tSuperUpdate, __tScriptsPost, __gcCurStartMb);
+		#end
 	}
 
 	override function draw() {
+		#if PROFILING var __tDraw = Sys.time(); #end
 		var e = scripts.event("draw", EventManager.get(DrawEvent).recycle());
+		#if PROFILING __profDrawScripts = Sys.time() - __tDraw; #end
+		#if PROFILING var __tDS = Sys.time(); #end
 		if (!e.cancelled)
 			super.draw();
+		#if PROFILING __profDrawSuper = Sys.time() - __tDS; #end
+		#if PROFILING var __tDP = Sys.time(); #end
 		scripts.event("postDraw", e);
+		#if PROFILING
+		__profDrawPost = Sys.time() - __tDP;
+		__profDrawTime = Sys.time() - __tDraw;
+		__profLastDrawEnd = Sys.time();
+		#end
 	}
 
 	public function moveCamera() if (strumLines.members[curCameraTarget] != null) {

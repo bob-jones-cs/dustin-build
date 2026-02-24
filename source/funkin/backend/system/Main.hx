@@ -36,6 +36,9 @@ class Main extends Sprite
 	public static var forceGPUOnlyBitmapsOff:Bool = #if desktop false #else true #end;
 	public static var noTerminalColor:Bool = false;
 	public static var verbose:Bool = false;
+	#if PROFILING
+	public static var profilingOutputDir:String = "profiling";
+	#end
 
 	public static var scaleMode:FunkinRatioScaleMode;
 	#if !mobile
