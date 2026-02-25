@@ -11,6 +11,7 @@ class GameplayOptions extends TreeMenuScreen {
 		super('optionsTree.gameplay-name', 'optionsTree.gameplay-desc', 'GameplayOptions.');
 
 		add(new Checkbox(getNameID('downscroll'), getDescID('downscroll'), 'downscroll'));
+		add(new Checkbox(getNameID('botPlay'), getDescID('botPlay'), 'botPlay'));
 		add(new Checkbox(getNameID('ghostTapping'), getDescID('ghostTapping'), 'ghostTapping'));
 		add(new Checkbox(getNameID('naughtyness'), getDescID('naughtyness'), 'naughtyness'));
 		add(new Checkbox(getNameID('camZoomOnBeat'), getDescID('camZoomOnBeat'), 'camZoomOnBeat'));

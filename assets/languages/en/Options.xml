@@ -102,6 +102,9 @@
 		<str id="downscroll-name">Downscroll</str>
 		<str id="downscroll-desc">If checked, notes will go from up to down instead of down to up, as if they're falling.</str>
 
+		<str id="botPlay-name">Bot Play</str>
+		<str id="botPlay-desc">If checked, notes will be hit automatically.</str>
+
 		<str id="ghostTapping-name">Ghost Tapping</str>
 		<str id="ghostTapping-desc">If unchecked, trying to hit any strum that have no note that can be hit will cause a miss.</str>
 
