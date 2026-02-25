@@ -2058,6 +2058,13 @@ class PlayState extends MusicBeatState
 			campaignAccuracyTotal += accuracy;
 			campaignAccuracyCount++;
 			for (k => v in hits) campaignHits[k] += v;
+
+			if (Options.botPlay) {
+				FlxG.switchState(new StoryMenuState());
+				FlxG.save.flush();
+				return;
+			}
+
 			storyPlaylist.shift();
 			storyVariations.shift();
 
