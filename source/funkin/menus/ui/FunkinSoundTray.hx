@@ -4,7 +4,6 @@ import funkin.backend.scripting.events.CancellableEvent;
 import funkin.backend.scripting.events.soundtray.*;
 import funkin.backend.scripting.Script;
 import flixel.system.ui.FlxSoundTray;
-import openfl.text.TextFormat;
 
 class FunkinSoundTray extends FlxSoundTray
 {
@@ -27,7 +26,6 @@ class FunkinSoundTray extends FlxSoundTray
 		FlxSoundTray.volumeUpChangeSFX = null;
 		FlxSoundTray.volumeDownChangeSFX = null;
 		FlxSoundTray.volumeMaxChangeSFX = null;
-		text.setTextFormat(new TextFormat(Paths.font("vcr.ttf")));
 
 		script.call("postCreate");
 	}
