@@ -126,9 +126,16 @@ class StrumLine extends FlxTypedGroup<Strum> {
 	public function generate(strumLine:ChartStrumLine, ?startTime:Float) {
 		// TODO: implement double generate call support if needed
 
+		// Track the last-seen time per lane so we can skip duplicate chart
+		// entries.  Two notes on the same lane within 2 ms of each other are
+		// considered duplicates (the chart editor occasionally produces these).
+		var lastTimePerLane:Map<Int, Float> = [];
+
 		var total = 0;
 		if (strumLine.notes != null) for(note in strumLine.notes) {
 			if (startTime != null && startTime > note.time)
+				continue;
+			if (__isDuplicateChartNote(note, lastTimePerLane))
 				continue;
 
 			total++;
@@ -148,8 +155,13 @@ class StrumLine extends FlxTypedGroup<Strum> {
 
 		var prev:Note = null;
 
+		// Reset for the creation pass.
+		lastTimePerLane.clear();
+
 		if (strumLine.notes != null) for(note in strumLine.notes) {
 			if (startTime != null && startTime > note.time)
+				continue;
+			if (__isDuplicateChartNote(note, lastTimePerLane))
 				continue;
 
 			notes.members[total-(il++)-1] = prev = new Note(this, note, false, prev);
@@ -178,6 +190,22 @@ class StrumLine extends FlxTypedGroup<Strum> {
 		notes.limit = limit / scrollSpeed;
 			OR
 		notes.limit = Flags.DEFAULT_NOTE_MS_LIMIT / scrollSpeed;*/
+	}
+
+	/**
+	 * Returns `true` if the given chart note is a duplicate of one already seen
+	 * on the same lane.  Two notes are considered duplicates when they share the
+	 * same lane (`id`) and their times are within 2 ms of each other.
+	 *
+	 * The caller must pass a persistent `lastTimePerLane` map that tracks the
+	 * most-recently-accepted time for each lane across the iteration.
+	 */
+	private static function __isDuplicateChartNote(note:ChartNote, lastTimePerLane:Map<Int, Float>):Bool {
+		var lane = note.id;
+		if (lastTimePerLane.exists(lane) && Math.abs(note.time - lastTimePerLane[lane]) <= 2)
+			return true;
+		lastTimePerLane[lane] = note.time;
+		return false;
 	}
 
 	public override function update(elapsed:Float) {
@@ -271,11 +299,7 @@ class StrumLine extends FlxTypedGroup<Strum> {
 			if (cur == null
 				|| notePenalty < curPenalty
 				|| (notePenalty == curPenalty && noteDist < curDist)) {
-				if (cur != null && Math.abs(cur.strumTime - note.strumTime) <= 2)
-					deleteNote(cur);
 				__notePerStrum[note.strumID] = note;
-			} else if (cur != null && Math.abs(cur.strumTime - note.strumTime) <= 2) {
-				deleteNote(note);
 			}
 		}
 	}
